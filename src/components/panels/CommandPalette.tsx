@@ -74,7 +74,6 @@ export const CommandPalette = () => {
       icon: Sparkles,
       action: () => {
         setRightPanelTab('ai');
-        toggleRightPanel();
       },
     },
     {
@@ -84,7 +83,6 @@ export const CommandPalette = () => {
       icon: Timer,
       action: () => {
         setRightPanelTab('pomodoro');
-        toggleRightPanel();
       },
     },
     {
@@ -94,7 +92,6 @@ export const CommandPalette = () => {
       icon: Music,
       action: () => {
         setRightPanelTab('music');
-        toggleRightPanel();
       },
     },
     ...pages.map((page) => ({
@@ -193,11 +190,10 @@ export const CommandPalette = () => {
                 return (
                   <motion.button
                     key={cmd.id}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${
-                      index === selectedIndex
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${index === selectedIndex
                         ? 'bg-primary/30'
                         : 'hover:bg-muted'
-                    }`}
+                      }`}
                     onClick={() => {
                       cmd.action();
                       setCommandPaletteOpen(false);

@@ -35,11 +35,10 @@ const PageTreeItem = ({
   return (
     <div className="select-none">
       <motion.div
-        className={`flex items-center gap-1 px-2 py-1.5 rounded-lg cursor-pointer transition-all duration-200 group ${
-          isActive
-            ? 'bg-primary/30'
-            : 'hover:bg-muted'
-        }`}
+        className={`flex items-center gap-1 px-2 py-1.5 rounded-lg cursor-pointer transition-all duration-200 group ${isActive
+          ? 'bg-primary/30'
+          : 'hover:bg-muted'
+          }`}
         style={{ paddingLeft: `${depth * 12 + 8}px` }}
         onClick={() => setCurrentPage(page.id)}
         whileHover={{ scale: 1.01 }}
@@ -50,9 +49,8 @@ const PageTreeItem = ({
             e.stopPropagation();
             setIsExpanded(!isExpanded);
           }}
-          className={`p-0.5 rounded hover:bg-muted transition-colors ${
-            hasChildren ? 'visible' : 'invisible'
-          }`}
+          className={`p-0.5 rounded hover:bg-muted transition-colors ${hasChildren ? 'visible' : 'invisible'
+            }`}
         >
           {isExpanded ? (
             <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
@@ -162,11 +160,10 @@ export const Sidebar = () => {
                 <motion.button
                   key={item.id}
                   onClick={() => setActiveView(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                    isActive
-                      ? 'bg-primary/30 text-foreground'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive
+                    ? 'bg-primary/30 text-foreground'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    }`}
                   whileHover={{ scale: 1.02, x: 2 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -191,8 +188,16 @@ export const Sidebar = () => {
                 <motion.button
                   key={item.id}
                   onClick={() => {
-                    setRightPanelTab(item.tab);
-                    toggleRightPanel();
+                    useEditorStore.setState((state) => {
+                      const isSameTab = state.rightPanelTab === item.tab;
+                      if (state.rightPanelOpen && isSameTab) {
+                        // Panel is open on the same tab - close it
+                        return { rightPanelOpen: false };
+                      } else {
+                        // Panel is closed or on a different tab - open with new tab
+                        return { rightPanelTab: item.tab, rightPanelOpen: true };
+                      }
+                    });
                   }}
                   className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                   whileHover={{ scale: 1.02, x: 2 }}
