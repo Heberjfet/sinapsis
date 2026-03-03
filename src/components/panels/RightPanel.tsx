@@ -22,7 +22,7 @@ export const RightPanel = () => {
           animate={{ width: 360, opacity: 1 }}
           exit={{ width: 0, opacity: 0 }}
           transition={{ duration: 0.25, ease: 'easeInOut' }}
-          className="h-full bg-card border-l border-border/50 flex flex-col overflow-hidden"
+          className="h-full bg-card border-l border-border/50 flex flex-col overflow-hidden shrink-0"
         >
           {/* Tab Bar */}
           <div className="flex items-center border-b border-border/30">

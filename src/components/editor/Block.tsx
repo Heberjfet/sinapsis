@@ -13,9 +13,10 @@ interface BlockProps {
   isActive: boolean;
   onFocus: () => void;
   onSlashMenu: (show: boolean) => void;
+  onNewBlock: (newBlockId: string) => void;
 }
 
-export const Block = ({ block, pageId, isActive, onFocus, onSlashMenu }: BlockProps) => {
+export const Block = ({ block, pageId, isActive, onFocus, onSlashMenu, onNewBlock }: BlockProps) => {
   const { updateBlock, updateBlockType, deleteBlock, addBlock, toggleTodo, updateBlockProperties } = useEditorStore();
   const contentRef = useRef<HTMLDivElement>(null);
   const [showSlashMenu, setShowSlashMenu] = useState(false);
@@ -41,11 +42,26 @@ export const Block = ({ block, pageId, isActive, onFocus, onSlashMenu }: BlockPr
     }
   }, []);
 
+  // Sync contentEditable when block content/type changes externally (e.g. slash menu conversion)
   useEffect(() => {
-    if (isActive && contentRef.current && block.type !== 'code' && block.type !== 'table' && block.type !== 'kanban') {
-      contentRef.current.focus();
+    if (contentRef.current && block.type !== 'code' && block.type !== 'table' && block.type !== 'kanban') {
+      if (contentRef.current.innerText !== block.content) {
+        contentRef.current.innerText = block.content;
+      }
     }
-  }, [isActive]);
+  }, [block.content, block.type]);
+
+  // Re-focus the block when type changes (e.g. after slash menu conversion)
+  useEffect(() => {
+    if (!isActive) return;
+
+    // Use requestAnimationFrame to let the DOM re-render with the new type first
+    requestAnimationFrame(() => {
+      if (contentRef.current && block.type !== 'code' && block.type !== 'table' && block.type !== 'kanban') {
+        contentRef.current.focus();
+      }
+    });
+  }, [isActive, block.type]);
 
   const handleInput = () => {
     if (contentRef.current && block.type !== 'code' && block.type !== 'table' && block.type !== 'kanban') {
@@ -94,7 +110,8 @@ export const Block = ({ block, pageId, isActive, onFocus, onSlashMenu }: BlockPr
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey && block.type !== 'code' && block.type !== 'table' && block.type !== 'kanban') {
       e.preventDefault();
-      addBlock(pageId, block.id);
+      const newBlockId = addBlock(pageId, block.id);
+      onNewBlock(newBlockId);
     } else if (e.key === 'Backspace' && block.content === '' && block.type !== 'code' && block.type !== 'table' && block.type !== 'kanban') {
       e.preventDefault();
       deleteBlock(pageId, block.id);
@@ -220,8 +237,8 @@ export const Block = ({ block, pageId, isActive, onFocus, onSlashMenu }: BlockPr
 
     if (block.type === 'code') {
       return (
-        <div className="rounded-xl overflow-hidden border border-border/50">
-          <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b border-border/30">
+        <div className="rounded-xl overflow-hidden border border-border/50 w-full">
+          <div className="flex items-center justify-between px-3 sm:px-4 py-2 bg-muted/50 border-b border-border/30">
             <select
               value={block.properties?.language || 'javascript'}
               onChange={handleLanguageChange}
@@ -244,8 +261,9 @@ export const Block = ({ block, pageId, isActive, onFocus, onSlashMenu }: BlockPr
             value={block.content}
             onChange={handleCodeChange}
             placeholder="Escribe tu código aquí..."
-            className="w-full px-4 py-3 bg-card text-sm font-mono text-foreground outline-none resize-none"
+            className="w-full px-3 sm:px-4 py-3 bg-card text-xs sm:text-sm font-mono text-foreground outline-none resize-none overflow-x-auto"
             rows={6}
+            autoFocus={isActive}
           />
         </div>
       );
@@ -253,7 +271,7 @@ export const Block = ({ block, pageId, isActive, onFocus, onSlashMenu }: BlockPr
 
     if (block.type === 'table') {
       return (
-        <div className="rounded-xl overflow-hidden border border-border/50">
+        <div className="rounded-xl overflow-hidden border border-border/50 w-full">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -280,11 +298,11 @@ export const Block = ({ block, pageId, isActive, onFocus, onSlashMenu }: BlockPr
 
     if (block.type === 'kanban') {
       return (
-        <div className="flex gap-4 overflow-x-auto py-2">
+        <div className="flex gap-3 overflow-x-auto py-2 -mx-1 px-1">
           {['Por hacer', 'En progreso', 'Hecho'].map((column, colIndex) => (
             <div
               key={colIndex}
-              className="flex-shrink-0 w-64 rounded-xl bg-muted/30 p-3"
+              className="flex-shrink-0 w-48 sm:w-56 md:w-64 rounded-xl bg-muted/30 p-3"
             >
               <h4 className="text-sm font-medium text-foreground mb-3">{column}</h4>
               <div className="space-y-2">
@@ -306,15 +324,15 @@ export const Block = ({ block, pageId, isActive, onFocus, onSlashMenu }: BlockPr
 
     if (block.type === 'image') {
       return (
-        <div className="rounded-xl overflow-hidden border border-border/50">
+        <div className="rounded-xl overflow-hidden border border-border/50 w-full">
           {block.properties?.url ? (
             <img
               src={block.properties.url}
               alt="Imagen"
-              className="w-full h-48 object-cover"
+              className="w-full h-40 sm:h-48 object-cover"
             />
           ) : (
-            <div className="flex flex-col items-center justify-center h-48 bg-muted/30">
+            <div className="flex flex-col items-center justify-center h-40 sm:h-48 bg-muted/30">
               <Image className="w-12 h-12 text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground mb-2">Arrastra una imagen o</p>
               <label className="px-4 py-2 bg-primary text-foreground text-sm rounded-lg cursor-pointer hover:bg-primary/80 transition-colors">
@@ -362,10 +380,12 @@ export const Block = ({ block, pageId, isActive, onFocus, onSlashMenu }: BlockPr
     }
   };
 
+  const isComplexBlock = ['code', 'table', 'kanban', 'image'].includes(block.type);
+
   if (block.type === 'divider') {
     return (
-      <div ref={setNodeRef} style={style} className="block-wrapper group px-10">
-        <div className="drag-handle absolute left-0 cursor-grab" {...attributes} {...listeners}>
+      <div ref={setNodeRef} style={style} className="block-wrapper group relative pl-6 sm:pl-8">
+        <div className="drag-handle absolute left-0 top-1/2 -translate-y-1/2 cursor-grab" {...attributes} {...listeners}>
           <GripVertical className="w-4 h-4" />
         </div>
         {renderContent()}
@@ -377,13 +397,13 @@ export const Block = ({ block, pageId, isActive, onFocus, onSlashMenu }: BlockPr
     <div
       ref={setNodeRef}
       style={style}
-      className={`block-wrapper group relative flex items-start py-0.5 ${isDragging ? 'z-50' : ''} ${
-        ['code', 'table', 'kanban', 'image'].includes(block.type) ? 'py-2' : ''
-      }`}
+      className={`block-wrapper group relative flex items-start py-0.5 w-full min-w-0 ${
+        isDragging ? 'z-50' : ''
+      } ${isComplexBlock ? 'py-2' : ''}`}
     >
-      {['code', 'table', 'kanban', 'image'].includes(block.type) ? null : (
+      {!isComplexBlock && (
         <div
-          className="drag-handle absolute -left-8 top-1 cursor-grab opacity-0 group-hover:opacity-50 transition-opacity"
+          className="drag-handle absolute -left-6 sm:-left-8 top-1 cursor-grab opacity-0 group-hover:opacity-50 transition-opacity"
           {...attributes}
           {...listeners}
         >
@@ -392,7 +412,7 @@ export const Block = ({ block, pageId, isActive, onFocus, onSlashMenu }: BlockPr
       )}
 
       <motion.div
-        className={`flex-1 ${getTextClass()}`}
+        className={`flex-1 min-w-0 ${getTextClass()}`}
         initial={{ opacity: 0, y: 5 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.15 }}

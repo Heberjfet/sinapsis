@@ -23,6 +23,8 @@ interface SlashMenuProps {
   isOpen: boolean;
   position: { x: number; y: number };
   onClose: () => void;
+  activeBlockId: string | null;
+  pageId: string | null;
 }
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -42,12 +44,12 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Image,
 };
 
-export const SlashMenu = ({ isOpen, position, onClose }: SlashMenuProps) => {
+export const SlashMenu = ({ isOpen, position, onClose, activeBlockId, pageId }: SlashMenuProps) => {
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const { currentPageId, updateBlockType, addBlock } = useEditorStore();
+  const { updateBlockType, updateBlock } = useEditorStore();
 
   const filteredCommands = SLASH_COMMANDS.filter(
     (cmd) =>
@@ -89,10 +91,11 @@ export const SlashMenu = ({ isOpen, position, onClose }: SlashMenuProps) => {
   }, [isOpen, filteredCommands, selectedIndex, onClose]);
 
   const selectCommand = (type: BlockType) => {
-    if (!currentPageId) return;
+    if (!pageId || !activeBlockId) return;
 
-    const newBlockId = addBlock(currentPageId);
-    updateBlockType(currentPageId, newBlockId, type);
+    // Convert the current block (the one with "/") to the selected type
+    updateBlockType(pageId, activeBlockId, type);
+    updateBlock(pageId, activeBlockId, '');
 
     onClose();
   };

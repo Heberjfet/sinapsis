@@ -134,7 +134,7 @@ export const Sidebar = () => {
           animate={{ width: 260, opacity: 1 }}
           exit={{ width: 0, opacity: 0 }}
           transition={{ duration: 0.25, ease: 'easeInOut' }}
-          className="h-full bg-pastel-lavender/30 border-r border-border/50 flex flex-col overflow-hidden"
+          className="h-full bg-pastel-lavender/30 border-r border-border/50 flex flex-col overflow-hidden shrink-0"
         >
           {/* Command Palette Trigger */}
           <div className="p-3 border-b border-border/30">

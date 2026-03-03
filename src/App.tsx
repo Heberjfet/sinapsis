@@ -32,9 +32,7 @@ function App() {
 
       {/* Main content */}
       <main
-        className={`flex-1 transition-all duration-300 flex flex-col overflow-hidden ${
-          sidebarOpen ? 'ml-0' : 'ml-0'
-        }`}
+        className="flex-1 min-w-0 transition-all duration-300 flex flex-col overflow-hidden"
       >
         {renderMainContent()}
       </main>
