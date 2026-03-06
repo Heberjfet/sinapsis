@@ -133,17 +133,16 @@ export const SlashMenu = ({ isOpen, position, onClose, activeBlockId, pageId }: 
               return (
                 <motion.button
                   key={cmd.id}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                    index === selectedIndex
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${index === selectedIndex
                       ? 'bg-primary/30'
                       : 'hover:bg-muted'
-                  }`}
+                    }`}
                   onClick={() => selectCommand(cmd.type)}
                   onMouseEnter={() => setSelectedIndex(index)}
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
                 >
-                  <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-pastel-lavender">
+                  <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-muted">
                     <Icon className="w-4 h-4 text-foreground/70" />
                   </div>
                   <div className="text-left">

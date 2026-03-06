@@ -12,7 +12,7 @@ interface BlockProps {
   pageId: string;
   isActive: boolean;
   onFocus: () => void;
-  onSlashMenu: (show: boolean) => void;
+  onSlashMenu: (show: boolean, position?: { x: number; y: number }) => void;
   onNewBlock: (newBlockId: string) => void;
 }
 
@@ -70,7 +70,17 @@ export const Block = ({ block, pageId, isActive, onFocus, onSlashMenu, onNewBloc
       // Check for slash command
       if (text === '/') {
         setShowSlashMenu(true);
-        onSlashMenu(true);
+        let pos: { x: number; y: number } | undefined;
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          const rect = range.getBoundingClientRect();
+          pos = { x: rect.left, y: rect.bottom + 5 };
+        } else if (contentRef.current) {
+          const rect = contentRef.current.getBoundingClientRect();
+          pos = { x: rect.left, y: rect.bottom + 5 };
+        }
+        onSlashMenu(true, pos);
       } else {
         setShowSlashMenu(false);
         onSlashMenu(false);
@@ -156,9 +166,8 @@ export const Block = ({ block, pageId, isActive, onFocus, onSlashMenu, onNewBloc
           <div
             ref={contentRef}
             contentEditable
-            className={`flex-1 outline-none block-editor ${
-              block.properties?.checked ? 'line-through text-muted-foreground' : ''
-            }`}
+            className={`flex-1 outline-none block-editor ${block.properties?.checked ? 'line-through text-muted-foreground' : ''
+              }`}
             data-placeholder="Tarea..."
             onInput={handleInput}
             onKeyDown={handleKeyDown}
@@ -397,9 +406,8 @@ export const Block = ({ block, pageId, isActive, onFocus, onSlashMenu, onNewBloc
     <div
       ref={setNodeRef}
       style={style}
-      className={`block-wrapper group relative flex items-start py-0.5 w-full min-w-0 ${
-        isDragging ? 'z-50' : ''
-      } ${isComplexBlock ? 'py-2' : ''}`}
+      className={`block-wrapper group relative flex items-start py-0.5 w-full min-w-0 ${isDragging ? 'z-50' : ''
+        } ${isComplexBlock ? 'py-2' : ''}`}
     >
       {!isComplexBlock && (
         <div

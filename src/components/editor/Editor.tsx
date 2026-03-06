@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   DndContext,
@@ -28,14 +28,26 @@ export const Editor = () => {
     toggleSidebar,
     sidebarOpen,
     activeView,
+    lastCreatedPageId,
+    consumeLastCreatedPage,
   } = useEditorStore();
 
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
   const [slashMenuOpen, setSlashMenuOpen] = useState(false);
   const [slashMenuPosition, setSlashMenuPosition] = useState({ x: 0, y: 0 });
   const [darkMode, setDarkMode] = useState(false);
-
   const currentPage = pages.find((p) => p.id === currentPageId);
+
+  useEffect(() => {
+    if (currentPageId && lastCreatedPageId === currentPageId) {
+      setTimeout(() => {
+        if (currentPage && currentPage.blocks.length > 0) {
+          setActiveBlockId(currentPage.blocks[0].id);
+        }
+      }, 50);
+      consumeLastCreatedPage();
+    }
+  }, [currentPageId, lastCreatedPageId, consumeLastCreatedPage, currentPage]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -110,14 +122,12 @@ export const Editor = () => {
         transition={{ duration: 0.2 }}
       >
         <div className="flex items-center gap-3">
-          {!sidebarOpen && (
-            <button
-              onClick={toggleSidebar}
-              className="p-2 rounded-lg hover:bg-muted transition-colors"
-            >
-              <Menu className="w-5 h-5 text-foreground" />
-            </button>
-          )}
+          <button
+            onClick={toggleSidebar}
+            className="p-2 rounded-lg hover:bg-muted transition-colors"
+          >
+            <Menu className="w-5 h-5 text-foreground" />
+          </button>
 
           <div className="flex items-center gap-2">
             <span className="text-2xl">{currentPage.icon || '📄'}</span>
@@ -125,6 +135,14 @@ export const Editor = () => {
               type="text"
               value={currentPage.title}
               onChange={(e) => updatePageTitle(currentPage.id, e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  if (currentPage.blocks.length > 0) {
+                    setActiveBlockId(currentPage.blocks[0].id);
+                  }
+                }
+              }}
               className="text-lg font-medium bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground w-full max-w-xs sm:max-w-sm md:max-w-md"
               placeholder="Sin título"
             />
@@ -148,7 +166,7 @@ export const Editor = () => {
       {/* Editor content */}
       <div className="flex-1 overflow-y-auto">
         <motion.div
-          className="w-full max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-8"
+          className="w-full px-8 sm:px-12 md:px-20 lg:px-32 xl:px-48 py-6 md:py-8"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3, delay: 0.1 }}
@@ -171,7 +189,7 @@ export const Editor = () => {
                     isActive={activeBlockId === block.id}
                     onFocus={() => handleBlockFocus(block.id)}
                     onNewBlock={handleNewBlock}
-                    onSlashMenu={(show) => handleSlashMenu(show, {
+                    onSlashMenu={(show, pos) => handleSlashMenu(show, pos || {
                       x: 100,
                       y: 100 + index * 40,
                     })}

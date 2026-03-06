@@ -40,7 +40,12 @@ const PageTreeItem = ({
           : 'hover:bg-muted'
           }`}
         style={{ paddingLeft: `${depth * 12 + 8}px` }}
-        onClick={() => setCurrentPage(page.id)}
+        onClick={() => {
+          setCurrentPage(page.id);
+          if (typeof window !== 'undefined' && window.innerWidth < 768) {
+            useEditorStore.setState({ sidebarOpen: false });
+          }
+        }}
         whileHover={{ scale: 1.01 }}
         whileTap={{ scale: 0.99 }}
       >
@@ -129,132 +134,151 @@ export const Sidebar = () => {
   return (
     <AnimatePresence mode="wait">
       {sidebarOpen && (
-        <motion.aside
-          initial={{ width: 0, opacity: 0 }}
-          animate={{ width: 260, opacity: 1 }}
-          exit={{ width: 0, opacity: 0 }}
-          transition={{ duration: 0.25, ease: 'easeInOut' }}
-          className="h-full bg-pastel-lavender/30 border-r border-border/50 flex flex-col overflow-hidden shrink-0"
-        >
-          {/* Command Palette Trigger */}
-          <div className="p-3 border-b border-border/30">
-            <motion.button
-              onClick={() => setCommandPaletteOpen(true)}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-sm text-muted-foreground"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Command className="w-4 h-4" />
-              <span className="flex-1 text-left">Buscar...</span>
-              <kbd className="px-1.5 py-0.5 bg-background rounded text-xs">⌘K</kbd>
-            </motion.button>
-          </div>
-
-          {/* Main Navigation */}
-          <div className="p-2 border-b border-border/30">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeView === item.id;
-
-              return (
-                <motion.button
-                  key={item.id}
-                  onClick={() => setActiveView(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive
-                    ? 'bg-primary/30 text-foreground'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                    }`}
-                  whileHover={{ scale: 1.02, x: 2 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
-                </motion.button>
-              );
-            })}
-          </div>
-
-          {/* Tools */}
-          <div className="p-2 border-b border-border/30">
-            <div className="px-3 py-2">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Herramientas
-              </span>
+        <>
+          {/* Mobile backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-background/80 backdrop-blur-sm z-40 md:hidden"
+            onClick={toggleSidebar}
+          />
+          <motion.aside
+            initial={{ width: 0, opacity: 0, x: -20 }}
+            animate={{ width: 260, opacity: 1, x: 0 }}
+            exit={{ width: 0, opacity: 0, x: -20 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="absolute md:relative left-0 top-0 bottom-0 z-50 h-full bg-background md:bg-muted border-r border-border/50 flex flex-col overflow-hidden shrink-0"
+          >
+            {/* Command Palette Trigger */}
+            <div className="p-3 border-b border-border/30">
+              <motion.button
+                onClick={() => setCommandPaletteOpen(true)}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-sm text-muted-foreground"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Command className="w-4 h-4" />
+                <span className="flex-1 text-left">Buscar...</span>
+                <kbd className="px-1.5 py-0.5 bg-background rounded text-xs">⌘K</kbd>
+              </motion.button>
             </div>
-            {toolItems.map((item) => {
-              const Icon = item.icon;
 
-              return (
-                <motion.button
-                  key={item.id}
-                  onClick={() => {
-                    useEditorStore.setState((state) => {
-                      const isSameTab = state.rightPanelTab === item.tab;
-                      if (state.rightPanelOpen && isSameTab) {
-                        // Panel is open on the same tab - close it
-                        return { rightPanelOpen: false };
-                      } else {
-                        // Panel is closed or on a different tab - open with new tab
-                        return { rightPanelTab: item.tab, rightPanelOpen: true };
+            {/* Main Navigation */}
+            <div className="p-2 border-b border-border/30">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeView === item.id;
+
+                return (
+                  <motion.button
+                    key={item.id}
+                    onClick={() => {
+                      setActiveView(item.id);
+                      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                        useEditorStore.setState({ sidebarOpen: false });
                       }
-                    });
-                  }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                  whileHover={{ scale: 1.02, x: 2 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
-                </motion.button>
-              );
-            })}
-          </div>
+                    }}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive
+                      ? 'bg-primary/30 text-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      }`}
+                    whileHover={{ scale: 1.02, x: 2 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="font-medium">{item.label}</span>
+                  </motion.button>
+                );
+              })}
+            </div>
 
-          {/* Pages Section */}
-          {activeView === 'notes' && (
-            <div className="flex-1 overflow-y-auto p-2">
-              <div className="flex items-center justify-between mb-2 px-2">
+            {/* Tools */}
+            <div className="p-2 border-b border-border/30">
+              <div className="px-3 py-2">
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Páginas
+                  Herramientas
                 </span>
-                <button
-                  onClick={handleNewPage}
-                  className="p-1 rounded hover:bg-muted transition-colors"
-                >
-                  <Plus className="w-4 h-4 text-muted-foreground" />
-                </button>
               </div>
+              {toolItems.map((item) => {
+                const Icon = item.icon;
 
-              {rootPages.map((page) => (
-                <PageTreeItem key={page.id} page={page} />
-              ))}
+                return (
+                  <motion.button
+                    key={item.id}
+                    onClick={() => {
+                      useEditorStore.setState((state) => {
+                        const isSameTab = state.rightPanelTab === item.tab;
+                        const newState: Partial<typeof state> = {};
+                        if (state.rightPanelOpen && isSameTab) {
+                          newState.rightPanelOpen = false;
+                        } else {
+                          newState.rightPanelTab = item.tab;
+                          newState.rightPanelOpen = true;
+                        }
+                        if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                          newState.sidebarOpen = false;
+                        }
+                        return newState;
+                      });
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    whileHover={{ scale: 1.02, x: 2 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="font-medium">{item.label}</span>
+                  </motion.button>
+                );
+              })}
+            </div>
 
-              {rootPages.length === 0 && (
-                <div className="text-center py-8">
-                  <FileText className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">No hay páginas</p>
+            {/* Pages Section */}
+            {activeView === 'notes' && (
+              <div className="flex-1 overflow-y-auto p-2">
+                <div className="flex items-center justify-between mb-2 px-2">
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Páginas
+                  </span>
                   <button
                     onClick={handleNewPage}
-                    className="text-sm text-primary hover:underline mt-1"
+                    className="p-1 rounded hover:bg-muted transition-colors"
                   >
-                    Crear una página
+                    <Plus className="w-4 h-4 text-muted-foreground" />
                   </button>
                 </div>
-              )}
-            </div>
-          )}
 
-          {/* Footer */}
-          <div className="p-3 border-t border-border/30">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-              Sinapsis v1.0
+                {rootPages.map((page) => (
+                  <PageTreeItem key={page.id} page={page} />
+                ))}
+
+                {rootPages.length === 0 && (
+                  <div className="text-center py-8">
+                    <FileText className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">No hay páginas</p>
+                    <button
+                      onClick={handleNewPage}
+                      className="text-sm text-primary hover:underline mt-1"
+                    >
+                      Crear una página
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Footer */}
+            <div className="p-3 border-t border-border/30">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                Sinapsis v1.0
+              </div>
             </div>
-          </div>
-        </motion.aside>
+          </motion.aside>
+        </>
       )}
 
-      {!sidebarOpen && (
+      {!sidebarOpen && activeView !== 'notes' && (
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

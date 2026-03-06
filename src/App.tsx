@@ -26,7 +26,7 @@ function App() {
   };
 
   return (
-    <div className="flex h-screen w-full bg-background overflow-hidden">
+    <div className="relative flex h-screen w-full bg-background overflow-hidden">
       {/* Sidebar */}
       <Sidebar />
 

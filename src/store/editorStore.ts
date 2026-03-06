@@ -62,6 +62,8 @@ interface EditorState {
   updatePageTitle: (id: string, title: string) => void;
   updatePageSubject: (id: string, subjectId: string) => void;
   setCurrentPage: (id: string | null) => void;
+  lastCreatedPageId: string | null;
+  consumeLastCreatedPage: () => void;
 
   // Block actions
   addBlock: (pageId: string, afterBlockId?: string | null) => string;
@@ -162,6 +164,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   pages: [createDefaultPage()],
   currentPageId: null,
   subjects: DEFAULT_SUBJECTS,
+  lastCreatedPageId: null,
+  consumeLastCreatedPage: () => set({ lastCreatedPageId: null }),
 
   createPage: (subjectId = null) => {
     const newPage: Page = {
@@ -181,6 +185,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set((state) => ({
       pages: [...state.pages, newPage],
       currentPageId: newPage.id,
+      lastCreatedPageId: newPage.id,
     }));
 
     return newPage.id;
@@ -334,12 +339,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           blocks: page.blocks.map((block) =>
             block.id === blockId && block.type === 'todo'
               ? {
-                  ...block,
-                  properties: {
-                    ...block.properties,
-                    checked: !block.properties?.checked,
-                  },
-                }
+                ...block,
+                properties: {
+                  ...block.properties,
+                  checked: !block.properties?.checked,
+                },
+              }
               : block
           ),
           updatedAt: Date.now(),

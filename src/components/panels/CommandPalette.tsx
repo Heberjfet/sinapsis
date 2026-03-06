@@ -191,8 +191,8 @@ export const CommandPalette = () => {
                   <motion.button
                     key={cmd.id}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${index === selectedIndex
-                        ? 'bg-primary/30'
-                        : 'hover:bg-muted'
+                      ? 'bg-primary/30'
+                      : 'hover:bg-muted'
                       }`}
                     onClick={() => {
                       cmd.action();
@@ -202,7 +202,7 @@ export const CommandPalette = () => {
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                   >
-                    <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-pastel-lavender">
+                    <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-muted">
                       <Icon className="w-4 h-4 text-foreground/70" />
                     </div>
                     <div className="text-left flex-1">
