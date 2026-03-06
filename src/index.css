@@ -29,34 +29,26 @@
   }
 
   .dark {
-    --background: 0 0% 10%;
-    /* #191919 */
-    --foreground: 0 0% 86%;
-    /* rgba(255,255,255, 0.86) */
-    --border: 0 0% 18%;
-    /* rgba(255,255,255, 0.09) approx */
-    --input: 0 0% 18%;
-    --ring: 210 76% 51%;
-    /* Blue accent */
-    --muted: 0 0% 15%;
-    /* #262626 - Sidebar/Hover bg */
-    --muted-foreground: 0 0% 60%;
-    /* rgba(255,255,255, 0.44) */
-    --popover: 0 0% 15%;
-    --popover-foreground: 0 0% 86%;
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 86%;
-    --primary: 210 76% 51%;
-    /* #2383E2 */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 18%;
-    --secondary-foreground: 0 0% 86%;
-    --accent: 0 0% 18%;
-    /* Selected items / hover */
-    --accent-foreground: 0 0% 86%;
-    --destructive: 0 60% 45%;
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --border: 0 0% 15%;
+    --input: 0 0% 10%;
+    --ring: 0 0% 100%;
+    --muted: 0 0% 6%;
+    --muted-foreground: 0 0% 70%;
+    --popover: 0 0% 0%;
+    --popover-foreground: 0 0% 100%;
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 100%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --success: 120 60% 45%;
+    --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
   }
 }
