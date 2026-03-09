@@ -106,17 +106,64 @@ sinapsis/
 
 ## 🤝 Cómo Contribuir
 
-1. **Fork** el repositorio
-2. Crea una rama para tu feature (`git checkout -b feature/nueva-funcionalidad`)
-3. **Commit** tus cambios (`git commit -m 'Agrega nueva funcionalidad'`)
-4. **Push** a la rama (`git push origin feature/nueva-funcionalidad`)
-5. Abre un **Pull Request**
+### Workflow Git (2 Desarrolladores)
+
+```
+main          ← Producción (código functional)
+develop       ← Desarrollo integrado
+├── feature/frontend-*   (Desarrollador Frontend)
+└── feature/backend-*    (Desarrollador Backend)
+```
+
+#### Reglas de Ramas
+
+| Tipo | Desde | Hacia | Ejemplo |
+|------|-------|-------|---------|
+| Feature Frontend | develop | develop | `feature/frontend-sidebar` |
+| Feature Backend | develop | develop | `feature/backend-api-auth` |
+| Bugfix | develop | develop | `fix/flashcard-bug` |
+| Hotfix | main | main + develop | `hotfix/security-patch` |
+
+#### Flujo de Trabajo
+
+```bash
+# 1. Antes de trabajar: crear rama desde develop
+git checkout develop
+git pull origin develop
+git checkout -b feature/frontend-nombre
+
+# 2. Trabaja en tu rama y haz commits
+git add .
+git commit -m "feat: descripción del cambio"
+
+# 3. Push y crea PR
+git push origin feature/frontend-nombre
+# Crear Pull Request en GitHub → develop
+
+# 4. Después de merge, actualiza tu develop local
+git checkout develop
+git pull origin develop
+```
+
+#### Convenciones de Commits
+
+```
+feat:     Nueva funcionalidad
+fix:      Corrección de bug
+refactor: Refactorización
+docs:     Documentación
+style:    Estilos (CSS/Tailwind)
+chore:    Tareas menores
+```
+
+---
 
 ### Buenas Prácticas
 - Usa TypeScript para todo el código nuevo
 - Sigue las convenciones de nombres del proyecto
 - Ejecuta `npm run lint` antes de commitear
 - Agrega tipos para nuevas props y funciones
+- Crea PRs hacia `develop`, NO directamente a `main`
 
 ---
 
