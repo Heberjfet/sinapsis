@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pages      Page[]
+  flashcards Flashcard[]
+  subjects   Subject[]
+  pomodoroSessions PomodoroSession[]
+}
+
+model Subject {
+  id        String   @id @default(uuid())
+  name      String
+  color     String
+  icon      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pages      Page[]
+  flashcards Flashcard[]
+}
+
+model Page {
+  id        String   @id @default(uuid())
+  title     String   @default("Sin título")
+  icon      String   @default("📄")
+  subjectId String?
+  subject   Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    Page?    @relation("PageHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children  Page[]   @relation("PageHierarchy")
+  blocks    Block[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([subjectId])
+}
+
+model Block {
+  id         String   @id @default(uuid())
+  type       String   @default("paragraph")
+  content    String   @default("")
+  properties Json?
+  checked    Boolean?
+  pageId     String
+  page       Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([pageId])
+}
+
+model Flashcard {
+  id           String    @id @default(uuid())
+  front        String
+  back         String
+  subjectId    String?
+  subject      Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nextReview   DateTime?
+  easeFactor   Float     @default(2.5)
+  interval     Int       @default(0)
+  repetitions  Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([subjectId])
+}
+
+model PomodoroSession {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startTime  DateTime
+  endTime    DateTime?
+  duration   Int
+  type       String   @default("focus")
+  completed  Boolean  @default(false)
+  subjectId  String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Image {
+  id        String   @id @default(uuid())
+  filename  String
+  path      String
+  mimeType  String
+  size      Int
+  pageId    String?
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([pageId])
+}
