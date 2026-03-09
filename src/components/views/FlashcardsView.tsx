@@ -1,27 +1,51 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  BookOpen,
   Plus,
-  RotateCcw,
   ChevronLeft,
   ChevronRight,
-  Check,
-  X,
   Trash2,
-  Edit,
+  ArrowLeft,
 } from 'lucide-react';
 import { useEditorStore } from '../../store/editorStore';
+import { FlashcardFormModal } from './FlashcardFormModal';
 
 export const FlashcardsView = () => {
-  const { flashcards, addFlashcard, deleteFlashcard, reviewFlashcard } = useEditorStore();
+  const {
+    flashcards,
+    subjects,
+    currentFlashcardTheme,
+    setCurrentFlashcardTheme,
+    studyingFlashcardId,
+    setStudyingFlashcardId,
+    addFlashcard,
+    deleteFlashcard,
+    reviewFlashcard,
+  } = useEditorStore();
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [newFront, setNewFront] = useState('');
-  const [newBack, setNewBack] = useState('');
 
-  const currentCard = flashcards[currentIndex];
+  // Filter flashcards based on theme
+  const filteredFlashcards = currentFlashcardTheme
+    ? flashcards.filter((card) => card.subjectId === currentFlashcardTheme)
+    : flashcards;
+
+  // Get current card (either from individual study or list)
+  const currentCard = studyingFlashcardId
+    ? flashcards.find((card) => card.id === studyingFlashcardId) ||
+      filteredFlashcards[currentIndex]
+    : filteredFlashcards[currentIndex];
+
+  const currentTheme = currentFlashcardTheme
+    ? subjects.find((s) => s.id === currentFlashcardTheme)
+    : null;
+
+  useEffect(() => {
+    setCurrentIndex(0);
+    setIsFlipped(false);
+  }, [currentFlashcardTheme]);
 
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
@@ -30,14 +54,16 @@ export const FlashcardsView = () => {
   const handleNext = () => {
     setIsFlipped(false);
     setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % flashcards.length);
+      setCurrentIndex((prev) => (prev + 1) % filteredFlashcards.length);
     }, 150);
   };
 
   const handlePrev = () => {
     setIsFlipped(false);
     setTimeout(() => {
-      setCurrentIndex((prev) => (prev - 1 + flashcards.length) % flashcards.length);
+      setCurrentIndex((prev) =>
+        prev - 1 < 0 ? filteredFlashcards.length - 1 : prev - 1
+      );
     }, 150);
   };
 
@@ -48,120 +74,121 @@ export const FlashcardsView = () => {
     }
   };
 
-  const handleAddCard = () => {
-    if (newFront.trim() && newBack.trim()) {
-      addFlashcard(newFront, newBack);
-      setNewFront('');
-      setNewBack('');
-      setShowForm(false);
+  const handleDelete = () => {
+    if (currentCard) {
+      deleteFlashcard(currentCard.id);
+      setCurrentIndex((prev) => {
+        const newLength = filteredFlashcards.length - 1;
+        if (newLength === 0) return 0;
+        return prev >= newLength ? prev - 1 : prev;
+      });
     }
   };
 
-  if (flashcards.length === 0) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center p-8">
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="text-center"
-        >
-          <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
-            <BookOpen className="w-12 h-12 text-muted-foreground" />
-          </div>
-          <h2 className="text-2xl font-semibold text-foreground mb-2">
-            No hay flashcards
-          </h2>
-          <p className="text-muted-foreground mb-6">
-            Crea tu primera tarjeta de memoria para comenzar a estudiar
-          </p>
-          <motion.button
-            onClick={() => setShowForm(true)}
-            className="px-6 py-3 bg-primary rounded-xl text-foreground font-medium"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Crear flashcard
-          </motion.button>
-        </motion.div>
+  const handleAddCard = (front: string, back: string) => {
+    addFlashcard(front, back, currentFlashcardTheme || undefined);
+    setShowForm(false);
+  };
 
-        {/* Add Form Modal */}
-        <AnimatePresence>
-          {showForm && (
-            <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50"
-                onClick={() => setShowForm(false)}
-              />
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-card rounded-2xl p-6 border border-border/50 shadow-xl z-50"
-              >
-                <h3 className="text-lg font-semibold text-foreground mb-4">
-                  Nueva Flashcard
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">
-                      Pregunta (Frente)
-                    </label>
-                    <textarea
-                      value={newFront}
-                      onChange={(e) => setNewFront(e.target.value)}
-                      className="w-full px-4 py-3 bg-muted rounded-xl border-none outline-none text-foreground placeholder:text-muted-foreground resize-none"
-                      rows={3}
-                      placeholder="Escribe la pregunta..."
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">
-                      Respuesta (Reverso)
-                    </label>
-                    <textarea
-                      value={newBack}
-                      onChange={(e) => setNewBack(e.target.value)}
-                      className="w-full px-4 py-3 bg-muted rounded-xl border-none outline-none text-foreground placeholder:text-muted-foreground resize-none"
-                      rows={3}
-                      placeholder="Escribe la respuesta..."
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-3 mt-6">
-                  <button
-                    onClick={() => setShowForm(false)}
-                    className="flex-1 px-4 py-2 border border-border rounded-xl text-muted-foreground hover:bg-muted transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={handleAddCard}
-                    className="flex-1 px-4 py-2 bg-primary rounded-xl text-foreground font-medium"
-                  >
-                    Crear
-                  </button>
-                </div>
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
+  const handleBackToThemes = () => {
+    setCurrentFlashcardTheme(null);
+    setStudyingFlashcardId(null);
+    setCurrentIndex(0);
+  };
+
+  // Empty state
+  if (filteredFlashcards.length === 0) {
+    return (
+      <div className="flex-1 flex flex-col p-8">
+        {currentTheme && (
+          <motion.button
+            onClick={handleBackToThemes}
+            className="self-start mb-8 flex items-center gap-2 px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+            whileHover={{ x: -4 }}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Volver a temas
+          </motion.button>
+        )}
+
+        <div className="flex-1 flex items-center justify-center">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="text-center"
+          >
+            {currentTheme ? (
+              <>
+                <h2 className="text-2xl font-semibold text-foreground mb-2">
+                  {currentTheme.icon} {currentTheme.name}
+                </h2>
+                <p className="text-muted-foreground mb-6">
+                  No hay flashcards en este tema aún
+                </p>
+              </>
+            ) : (
+              <>
+                <h2 className="text-2xl font-semibold text-foreground mb-2">
+                  No hay flashcards
+                </h2>
+                <p className="text-muted-foreground mb-6">
+                  Crea tu primera tarjeta de memoria para comenzar a estudiar
+                </p>
+              </>
+            )}
+
+            <motion.button
+              onClick={() => setShowForm(true)}
+              className="px-6 py-3 bg-primary rounded-xl text-foreground font-medium"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Crear flashcard
+            </motion.button>
+          </motion.div>
+        </div>
+
+        <FlashcardFormModal
+          isOpen={showForm}
+          onClose={() => setShowForm(false)}
+          onSubmit={handleAddCard}
+          themeName={currentTheme?.name}
+        />
       </div>
     );
   }
 
   return (
     <div className="flex-1 flex flex-col p-8">
-      {/* Header */}
+      {/* Header with back button if in theme view */}
       <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Flashcards</h1>
-          <p className="text-muted-foreground">
-            Tarjeta {currentIndex + 1} de {flashcards.length}
-          </p>
+        <div className="flex items-center gap-4">
+          {currentTheme && (
+            <motion.button
+              onClick={handleBackToThemes}
+              className="p-2 rounded-lg hover:bg-muted transition-colors"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+            </motion.button>
+          )}
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              {currentTheme ? (
+                <>
+                  {currentTheme.icon} {currentTheme.name}
+                </>
+              ) : (
+                'Flashcards'
+              )}
+            </h1>
+            <p className="text-muted-foreground">
+              Tarjeta {currentIndex + 1} de {filteredFlashcards.length}
+            </p>
+          </div>
         </div>
+
         <motion.button
           onClick={() => setShowForm(true)}
           className="flex items-center gap-2 px-4 py-2 bg-primary rounded-xl text-foreground font-medium"
@@ -188,7 +215,7 @@ export const FlashcardsView = () => {
               exit={{ opacity: 0, rotateY: 90 }}
               transition={{ duration: 0.3 }}
               onClick={handleFlip}
-              className="relative h-80 cursor-pointer perspective-1000"
+              className="relative h-80 cursor-pointer"
               style={{ perspective: 1000 }}
             >
               <motion.div
@@ -200,7 +227,7 @@ export const FlashcardsView = () => {
                 {/* Front */}
                 <div
                   className="absolute inset-0 bg-card rounded-2xl p-8 border border-border/50 shadow-lg flex flex-col items-center justify-center"
-                  style={{ 
+                  style={{
                     backfaceVisibility: 'hidden',
                     WebkitBackfaceVisibility: 'hidden',
                     transform: 'rotateY(0deg)',
@@ -284,12 +311,7 @@ export const FlashcardsView = () => {
           {/* Delete button */}
           <div className="flex justify-center mt-4">
             <button
-              onClick={() => {
-                deleteFlashcard(currentCard.id);
-                if (currentIndex >= flashcards.length - 1) {
-                  setCurrentIndex(Math.max(0, currentIndex - 1));
-                }
-              }}
+              onClick={handleDelete}
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-destructive transition-colors"
             >
               <Trash2 className="w-4 h-4" />
@@ -299,70 +321,12 @@ export const FlashcardsView = () => {
         </motion.div>
       </div>
 
-      {/* Add Form Modal */}
-      <AnimatePresence>
-        {showForm && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50"
-              onClick={() => setShowForm(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-card rounded-2xl p-6 border border-border/50 shadow-xl z-50"
-            >
-              <h3 className="text-lg font-semibold text-foreground mb-4">
-                Nueva Flashcard
-              </h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm text-muted-foreground mb-1 block">
-                    Pregunta (Frente)
-                  </label>
-                  <textarea
-                    value={newFront}
-                    onChange={(e) => setNewFront(e.target.value)}
-                    className="w-full px-4 py-3 bg-muted rounded-xl border-none outline-none text-foreground placeholder:text-muted-foreground resize-none"
-                    rows={3}
-                    placeholder="Escribe la pregunta..."
-                  />
-                </div>
-                <div>
-                  <label className="text-sm text-muted-foreground mb-1 block">
-                    Respuesta (Reverso)
-                  </label>
-                  <textarea
-                    value={newBack}
-                    onChange={(e) => setNewBack(e.target.value)}
-                    className="w-full px-4 py-3 bg-muted rounded-xl border-none outline-none text-foreground placeholder:text-muted-foreground resize-none"
-                    rows={3}
-                    placeholder="Escribe la respuesta..."
-                  />
-                </div>
-              </div>
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={() => setShowForm(false)}
-                  className="flex-1 px-4 py-2 border border-border rounded-xl text-muted-foreground hover:bg-muted transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleAddCard}
-                  className="flex-1 px-4 py-2 bg-primary rounded-xl text-foreground font-medium"
-                >
-                  Crear
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      <FlashcardFormModal
+        isOpen={showForm}
+        onClose={() => setShowForm(false)}
+        onSubmit={handleAddCard}
+        themeName={currentTheme?.name}
+      />
     </div>
   );
 };

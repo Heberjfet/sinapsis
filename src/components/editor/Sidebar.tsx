@@ -17,6 +17,7 @@ import {
 import { useEditorStore } from '../../store/editorStore';
 import { Page } from '../../types/editor';
 import { useState } from 'react';
+import { FlashcardsThemeDropdown } from './FlashcardsThemeDropdown';
 
 const PageTreeItem = ({
   page,
@@ -169,6 +170,17 @@ export const Sidebar = () => {
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeView === item.id;
+
+                // Use dropdown for Flashcards
+                if (item.id === 'flashcards') {
+                  return (
+                    <FlashcardsThemeDropdown
+                      key={item.id}
+                      isActive={isActive}
+                      onNavigate={() => setActiveView(item.id)}
+                    />
+                  );
+                }
 
                 return (
                   <motion.button
