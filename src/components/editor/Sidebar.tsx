@@ -18,6 +18,7 @@ import { useEditorStore } from '../../store/editorStore';
 import { Page } from '../../types/editor';
 import { useState } from 'react';
 import { FlashcardsThemeDropdown } from './FlashcardsThemeDropdown';
+import { BackendStatus } from './BackendStatus';
 
 const PageTreeItem = ({
   page,
@@ -281,9 +282,9 @@ export const Sidebar = () => {
 
             {/* Footer */}
             <div className="p-3 border-t border-border/30">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-                Sinapsis v1.0
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <BackendStatus />
+                <span>Sinapsis v1.0</span>
               </div>
             </div>
           </motion.aside>
