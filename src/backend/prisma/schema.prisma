@@ -14,11 +14,6 @@ model User {
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  pages      Page[]
-  flashcards Flashcard[]
-  subjects   Subject[]
-  pomodoroSessions PomodoroSession[]
 }
 
 model Subject {
@@ -26,8 +21,7 @@ model Subject {
   name      String
   color     String
   icon      String
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @default("guest")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -42,7 +36,6 @@ model Page {
   subjectId String?
   subject   Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
   userId    String   @default("guest")
-  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   parentId  String?
   parent    Page?    @relation("PageHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
   children  Page[]   @relation("PageHierarchy")
@@ -75,7 +68,6 @@ model Flashcard {
   subjectId    String?
   subject      Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
   userId       String    @default("guest")
-  user         User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   nextReview   DateTime?
   easeFactor   Float     @default(2.5)
   interval     Int       @default(0)
@@ -90,7 +82,6 @@ model Flashcard {
 model PomodoroSession {
   id         String   @id @default(uuid())
   userId     String   @default("guest")
-  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   startTime  DateTime
   endTime    DateTime?
   duration   Int

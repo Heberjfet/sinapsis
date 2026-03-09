@@ -24,6 +24,7 @@ export const notesDb = {
       data: {
         title: data.title || 'Sin título',
         icon: data.icon || '📄',
+        userId: 'guest',
       },
       include: { blocks: true },
     });
