@@ -83,6 +83,14 @@ interface EditorState {
   deleteFlashcard: (id: string) => void;
   reviewFlashcard: (id: string, quality: number) => void;
 
+  // Flashcards Navigation
+  currentFlashcardTheme: string | null;
+  studyingFlashcardId: string | null;
+  showCreateThemeModal: boolean;
+  setCurrentFlashcardTheme: (themeId: string | null) => void;
+  setStudyingFlashcardId: (id: string | null) => void;
+  setShowCreateThemeModal: (show: boolean) => void;
+
   // Pomodoro
   pomodoroActive: boolean;
   pomodoroType: 'focus' | 'short-break' | 'long-break';
@@ -362,6 +370,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   deleteSubject: (id) => {
     set((state) => ({
       subjects: state.subjects.filter((s) => s.id !== id),
+      flashcards: state.flashcards.filter((card) => card.subjectId !== id),
+      currentFlashcardTheme: state.currentFlashcardTheme === id ? null : state.currentFlashcardTheme,
     }));
   },
 
@@ -445,6 +455,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       }),
     }));
   },
+
+  // Flashcards Navigation
+  currentFlashcardTheme: null,
+  studyingFlashcardId: null,
+  showCreateThemeModal: false,
+  setCurrentFlashcardTheme: (themeId) => set({ currentFlashcardTheme: themeId }),
+  setStudyingFlashcardId: (id) => set({ studyingFlashcardId: id }),
+  setShowCreateThemeModal: (show) => set({ showCreateThemeModal: show }),
 
   // Pomodoro
   pomodoroActive: false,

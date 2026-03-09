@@ -3,6 +3,7 @@ import { Sidebar } from './components/editor/Sidebar';
 import { Editor } from './components/editor/Editor';
 import { RightPanel } from './components/panels/RightPanel';
 import { CommandPalette } from './components/panels/CommandPalette';
+import { CreateThemeModal } from './components/panels/CreateThemeModal';
 import { DashboardView } from './components/views/DashboardView';
 import { FlashcardsView } from './components/views/FlashcardsView';
 import { SettingsView } from './components/views/SettingsView';
@@ -42,6 +43,9 @@ function App() {
 
       {/* Command Palette */}
       <CommandPalette />
+
+      {/* Create Theme Modal */}
+      <CreateThemeModal />
     </div>
   );
 }
