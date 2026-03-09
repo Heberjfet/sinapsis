@@ -272,7 +272,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set({ currentPageId: id });
   },
 
-  addBlock: (pageId, afterBlockId = null) => {
+  addBlock: async (pageId, afterBlockId = null) => {
     const newBlockId = uuidv4();
 
     set((state) => ({
@@ -300,10 +300,25 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       }),
     }));
 
+    try {
+      const created = await notesApi.createBlock(pageId, { type: 'text', content: '', afterBlockId });
+      set((state) => ({
+        pages: state.pages.map((page) => {
+          if (page.id !== pageId) return page;
+          return {
+            ...page,
+            blocks: page.blocks.map((b) => b.id === newBlockId ? { ...b, id: created.id } : b),
+          };
+        }),
+      }));
+    } catch (error) {
+      console.error('Error adding block:', error);
+    }
+
     return newBlockId;
   },
 
-  updateBlock: (pageId, blockId, content) => {
+  updateBlock: async (pageId, blockId, content) => {
     set((state) => ({
       pages: state.pages.map((page) => {
         if (page.id !== pageId) return page;
@@ -317,9 +332,15 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         };
       }),
     }));
+
+    try {
+      await notesApi.updateBlock(pageId, blockId, { content });
+    } catch (error) {
+      console.error('Error updating block:', error);
+    }
   },
 
-  updateBlockType: (pageId, blockId, type) => {
+  updateBlockType: async (pageId, blockId, type) => {
     set((state) => ({
       pages: state.pages.map((page) => {
         if (page.id !== pageId) return page;
@@ -333,6 +354,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         };
       }),
     }));
+
+    try {
+      await notesApi.updateBlock(pageId, blockId, { type });
+    } catch (error) {
+      console.error('Error updating block type:', error);
+    }
   },
 
   updateBlockProperties: (pageId, blockId, properties) => {
@@ -353,7 +380,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }));
   },
 
-  deleteBlock: (pageId, blockId) => {
+  deleteBlock: async (pageId, blockId) => {
     set((state) => ({
       pages: state.pages.map((page) => {
         if (page.id !== pageId) return page;
@@ -362,6 +389,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         return { ...page, blocks, updatedAt: Date.now() };
       }),
     }));
+
+    try {
+      await notesApi.deleteBlock(pageId, blockId);
+    } catch (error) {
+      console.error('Error deleting block:', error);
+    }
   },
 
   reorderBlocks: (pageId, activeId, overId) => {
