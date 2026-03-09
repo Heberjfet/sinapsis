@@ -192,15 +192,19 @@ export const FlashcardsView = () => {
               style={{ perspective: 1000 }}
             >
               <motion.div
-                className="w-full h-full relative preserve-3d"
+                className="w-full h-full relative"
                 animate={{ rotateY: isFlipped ? 180 : 0 }}
                 transition={{ duration: 0.4 }}
                 style={{ transformStyle: 'preserve-3d' }}
               >
                 {/* Front */}
                 <div
-                  className="absolute inset-0 backface-hidden bg-card rounded-2xl p-8 border border-border/50 shadow-lg flex flex-col items-center justify-center"
-                  style={{ backfaceVisibility: 'hidden' }}
+                  className="absolute inset-0 bg-card rounded-2xl p-8 border border-border/50 shadow-lg flex flex-col items-center justify-center"
+                  style={{ 
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    transform: 'rotateY(0deg)',
+                  }}
                 >
                   <div className="text-sm text-muted-foreground mb-4">PREGUNTA</div>
                   <div className="text-2xl font-semibold text-foreground text-center">
@@ -213,9 +217,10 @@ export const FlashcardsView = () => {
 
                 {/* Back */}
                 <div
-                  className="absolute inset-0 backface-hidden bg-primary/10 rounded-2xl p-8 border border-primary/30 shadow-lg flex flex-col items-center justify-center"
+                  className="absolute inset-0 bg-primary/10 rounded-2xl p-8 border border-primary/30 shadow-lg flex flex-col items-center justify-center"
                   style={{
                     backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
                     transform: 'rotateY(180deg)',
                   }}
                 >
