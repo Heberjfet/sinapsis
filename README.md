@@ -46,13 +46,43 @@
 
 ## 🏃‍♂️ Inicio Rápido
 
+### Solo Frontend (modo local)
+
 ```bash
 # Instalar dependencias
 npm install
 
 # Iniciar servidor de desarrollo
 npm run dev
+```
 
+### Frontend + Backend (completo)
+
+```bash
+# 1. Base de datos PostgreSQL
+# Instalar PostgreSQL y crear base de datos:
+createdb sinapsis
+
+# 2. Backend
+cd src/backend
+npm install
+cp .env.example .env
+# Editar .env con tus credenciales
+npm run db:generate
+npm run db:push
+npm run dev
+
+# 3. Frontend (en otra terminal)
+cd ../..
+npm install
+npm run dev
+```
+
+---
+
+### Comandos Adicionales
+
+```bash
 # Build para producción
 npm run build
 
