@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { Page, Block, BlockType } from '../types/editor';
+import { notesApi } from '../lib/notesApi';
 
 interface Subject {
   id: string;
@@ -121,6 +122,9 @@ interface EditorState {
 
   // Get current page
   getCurrentPage: () => Page | undefined;
+
+  // Load pages from backend
+  loadPages: () => Promise<void>;
 }
 
 const createDefaultPage = (): Page => ({
@@ -169,16 +173,35 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setRightPanelTab: (tab) => set({ rightPanelTab: tab, rightPanelOpen: true }),
 
   // Pages
-  pages: [createDefaultPage()],
+  pages: [],
   currentPageId: null,
   subjects: DEFAULT_SUBJECTS,
   lastCreatedPageId: null,
   consumeLastCreatedPage: () => set({ lastCreatedPageId: null }),
 
-  createPage: (subjectId = null) => {
+  // Load pages from backend
+  loadPages: async () => {
+    try {
+      const pages = await notesApi.getAll();
+      if (pages.length > 0) {
+        set({ pages, currentPageId: pages[0].id });
+      } else {
+        const defaultPage = createDefaultPage();
+        set({ pages: [defaultPage], currentPageId: defaultPage.id });
+      }
+    } catch (error) {
+      console.error('Error loading pages:', error);
+      const defaultPage = createDefaultPage();
+      set({ pages: [defaultPage], currentPageId: defaultPage.id });
+    }
+  },
+
+  createPage: async (subjectId = null) => {
+    const tempId = uuidv4();
     const newPage: Page = {
-      id: uuidv4(),
+      id: tempId,
       title: 'Sin título',
+      icon: '📄',
       blocks: [
         {
           id: uuidv4(),
@@ -186,6 +209,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           content: '',
         },
       ],
+      subjectId: subjectId || undefined,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
@@ -196,22 +220,44 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       lastCreatedPageId: newPage.id,
     }));
 
+    try {
+      const created = await notesApi.create({ title: 'Sin título', subjectId: subjectId || undefined });
+      set((state) => ({
+        pages: state.pages.map((p) => p.id === tempId ? { ...p, id: created.id } : p),
+        currentPageId: state.currentPageId === tempId ? created.id : state.currentPageId,
+      }));
+    } catch (error) {
+      console.error('Error creating page:', error);
+    }
+
     return newPage.id;
   },
 
-  deletePage: (id) => {
+  deletePage: async (id) => {
     set((state) => ({
       pages: state.pages.filter((page) => page.id !== id),
       currentPageId: state.currentPageId === id ? state.pages[0]?.id || null : state.currentPageId,
     }));
+
+    try {
+      await notesApi.delete(id);
+    } catch (error) {
+      console.error('Error deleting page:', error);
+    }
   },
 
-  updatePageTitle: (id, title) => {
+  updatePageTitle: async (id, title) => {
     set((state) => ({
       pages: state.pages.map((page) =>
         page.id === id ? { ...page, title, updatedAt: Date.now() } : page
       ),
     }));
+
+    try {
+      await notesApi.update(id, { title });
+    } catch (error) {
+      console.error('Error updating page:', error);
+    }
   },
 
   updatePageSubject: (id, subjectId) => {

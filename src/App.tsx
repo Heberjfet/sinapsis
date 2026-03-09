@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useEditorStore } from './store/editorStore';
 import { Sidebar } from './components/editor/Sidebar';
 import { Editor } from './components/editor/Editor';
@@ -9,7 +10,11 @@ import { FlashcardsView } from './components/views/FlashcardsView';
 import { SettingsView } from './components/views/SettingsView';
 
 function App() {
-  const { sidebarOpen, activeView } = useEditorStore();
+  const { sidebarOpen, activeView, loadPages } = useEditorStore();
+
+  useEffect(() => {
+    loadPages();
+  }, [loadPages]);
 
   const renderMainContent = () => {
     switch (activeView) {
