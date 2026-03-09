@@ -197,50 +197,49 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   createPage: async (subjectId = null) => {
-    const tempId = uuidv4();
-    const newPage: Page = {
-      id: tempId,
-      title: 'Sin título',
-      icon: '📄',
-      blocks: [
-        {
-          id: uuidv4(),
-          type: 'text',
-          content: '',
-        },
-      ],
-      subjectId: subjectId || undefined,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-
     set((state) => ({
-      pages: [...state.pages, newPage],
-      currentPageId: newPage.id,
-      lastCreatedPageId: newPage.id,
+      pages: [...state.pages, {
+        id: 'loading-' + Date.now(),
+        title: 'Sin título',
+        icon: '📄',
+        blocks: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      }],
+      currentPageId: 'loading-' + Date.now(),
+      lastCreatedPageId: 'loading-' + Date.now(),
     }));
 
     try {
       const created = await notesApi.create({ title: 'Sin título', subjectId: subjectId || undefined });
+      const fullPage = await notesApi.getById(created.id);
+      
       set((state) => ({
-        pages: state.pages.map((p) => p.id === tempId ? { ...p, id: created.id } : p),
-        currentPageId: state.currentPageId === tempId ? created.id : state.currentPageId,
+        pages: state.pages.map((p) => p.id.startsWith('loading-') ? fullPage : p),
+        currentPageId: fullPage.id,
+        lastCreatedPageId: fullPage.id,
       }));
+      
+      return fullPage.id;
     } catch (error) {
       console.error('Error creating page:', error);
     }
 
-    return newPage.id;
+    return '';
   },
 
   deletePage: async (id) => {
+    const pageIdToDelete = id;
+    
     set((state) => ({
-      pages: state.pages.filter((page) => page.id !== id),
-      currentPageId: state.currentPageId === id ? state.pages[0]?.id || null : state.currentPageId,
+      pages: state.pages.filter((page) => page.id !== pageIdToDelete),
+      currentPageId: state.currentPageId === pageIdToDelete ? state.pages[0]?.id || null : state.currentPageId,
     }));
 
     try {
-      await notesApi.delete(id);
+      if (!pageIdToDelete.startsWith('loading-')) {
+        await notesApi.delete(pageIdToDelete);
+      }
     } catch (error) {
       console.error('Error deleting page:', error);
     }
@@ -254,7 +253,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }));
 
     try {
-      await notesApi.update(id, { title });
+      if (!id.startsWith('loading-')) {
+        await notesApi.update(id, { title });
+      }
     } catch (error) {
       console.error('Error updating page:', error);
     }
@@ -301,16 +302,18 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }));
 
     try {
-      const created = await notesApi.createBlock(pageId, { type: 'text', content: '', afterBlockId });
-      set((state) => ({
-        pages: state.pages.map((page) => {
-          if (page.id !== pageId) return page;
-          return {
-            ...page,
-            blocks: page.blocks.map((b) => b.id === newBlockId ? { ...b, id: created.id } : b),
-          };
-        }),
-      }));
+      if (!pageId.startsWith('loading-')) {
+        const created = await notesApi.createBlock(pageId, { type: 'text', content: '', afterBlockId });
+        set((state) => ({
+          pages: state.pages.map((page) => {
+            if (page.id !== pageId) return page;
+            return {
+              ...page,
+              blocks: page.blocks.map((b) => b.id === newBlockId ? { ...b, id: created.id } : b),
+            };
+          }),
+        }));
+      }
     } catch (error) {
       console.error('Error adding block:', error);
     }
@@ -334,7 +337,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }));
 
     try {
-      await notesApi.updateBlock(pageId, blockId, { content });
+      if (!pageId.startsWith('loading-') && !blockId.startsWith('loading-')) {
+        await notesApi.updateBlock(pageId, blockId, { content });
+      }
     } catch (error) {
       console.error('Error updating block:', error);
     }
@@ -391,7 +396,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }));
 
     try {
-      await notesApi.deleteBlock(pageId, blockId);
+      if (!pageId.startsWith('loading-') && !blockId.startsWith('loading-')) {
+        await notesApi.deleteBlock(pageId, blockId);
+      }
     } catch (error) {
       console.error('Error deleting block:', error);
     }
